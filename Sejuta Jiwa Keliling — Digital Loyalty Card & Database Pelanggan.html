@@ -1,0 +1,1958 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sejuta Jiwa Keliling — Digital Loyalty Card & Database Pelanggan</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #faf7f2;
+      color: #292524;
+    }
+    .coffee-gradient {
+      background: linear-gradient(135deg, #3b2314 0%, #683b20 55%, #8c5230 100%);
+    }
+    .card-pattern {
+      background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+      background-size: 16px 16px;
+    }
+    .stamp-pop {
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease;
+    }
+    .stamp-pop:active {
+      transform: scale(0.92);
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f5efe6;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #d6c7b2;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-amber-700 selection:text-white">
+
+  <!-- Top Header -->
+  <header class="coffee-gradient text-white shadow-lg sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl bg-amber-500/20 border border-amber-300/30 flex items-center justify-center shadow-inner">
+          <svg class="w-6 h-6 text-amber-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 1v3M10 1v3M14 1v3" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg sm:text-xl font-extrabold tracking-tight">Sejuta Jiwa Keliling</h1>
+            <span class="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200 border border-amber-300/30">Beli 9 Gratis 1</span>
+          </div>
+          <p class="text-xs text-amber-100/80">Sistem Kartu Loyalty Digital, Kasir Stempel &amp; Pengingat Gratis Kopi Ulang Tahun</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="btnOpenAddCustomer" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold text-xs sm:text-sm shadow transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          <span>Member Baru</span>
+        </button>
+        <button id="btnExportCSV" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium text-xs sm:text-sm border border-white/15 transition" title="Unduh Database ke CSV (Excel/Sheets)">
+          <svg class="w-4 h-4 text-amber-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span class="hidden sm:inline">Ekspor CSV</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="bg-stone-950/35 border-t border-white/10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-1 overflow-x-auto py-1.5">
+        <button type="button" data-tab="kasir" class="nav-tab px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition flex items-center gap-2 bg-amber-400 text-stone-950 shadow-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>Kasir &amp; Stempel Cepat</span>
+        </button>
+        <button type="button" data-tab="kartu" class="nav-tab px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition flex items-center gap-2 text-amber-100 hover:bg-white/10">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+          </svg>
+          <span>Kartu Digital Member</span>
+        </button>
+        <button type="button" data-tab="database" class="nav-tab px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition flex items-center gap-2 text-amber-100 hover:bg-white/10">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span>Database &amp; Ulang Tahun</span>
+          <span id="badgeBirthdayCount" class="px-1.5 py-0.5 text-[10px] rounded-full bg-rose-500 text-white font-bold">0</span>
+        </button>
+        <button type="button" data-tab="riwayat" class="nav-tab px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition flex items-center gap-2 text-amber-100 hover:bg-white/10">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>Riwayat Transaksi</span>
+        </button>
+        <button type="button" data-tab="qrcode" class="nav-tab px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition flex items-center gap-2 text-amber-100 hover:bg-white/10">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+          </svg>
+          <span>QR Code Gerobak &amp; Form</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+    <!-- KPI Summary Bar -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <div class="bg-white rounded-2xl p-4 border border-stone-200/80 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium text-stone-500">Total Pelanggan Terdaftar</p>
+          <p id="statTotalCustomers" class="text-2xl font-extrabold text-stone-900 mt-0.5">0</p>
+          <p class="text-[11px] text-amber-700 font-medium mt-0.5">Database aktif tersimpan</p>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-4 border border-stone-200/80 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium text-stone-500">Siap Klaim Gratis (9/9)</p>
+          <p id="statReadyClaim" class="text-2xl font-extrabold text-emerald-600 mt-0.5">0</p>
+          <p class="text-[11px] text-emerald-700 font-medium mt-0.5">Reward 1 cup gratis siap tukar</p>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-4 border border-stone-200/80 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium text-stone-500">Ulang Tahun (Hari Ini &amp; 7 Hari)</p>
+          <p id="statBirthdaySoon" class="text-2xl font-extrabold text-rose-600 mt-0.5">0</p>
+          <p class="text-[11px] text-rose-600 font-medium mt-0.5">Promo Free Birthday Cup</p>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18z" />
+          </svg>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-4 border border-stone-200/80 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium text-stone-500">Total Cup &amp; Reward Terklaim</p>
+          <p id="statTotalCups" class="text-2xl font-extrabold text-stone-900 mt-0.5">0</p>
+          <p id="statTotalRewardsSub" class="text-[11px] text-stone-500 font-medium mt-0.5">0 cup gratis diberikan</p>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-stone-100 text-stone-700 flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- Birthday Spotlight Banner (Auto-updated) -->
+    <section id="birthdayBanner" class="bg-gradient-to-r from-rose-50 via-amber-50 to-orange-50 border border-rose-200 rounded-2xl p-4 shadow-sm">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h2 class="text-sm font-bold text-rose-950">Radar Ulang Tahun Pelanggan (Program Free Kopi Ultah)</h2>
+              <span id="currentDateLabel" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-200/70 text-rose-900"></span>
+            </div>
+            <p class="text-xs text-stone-600 mt-0.5">Kirim ucapan selamat ulang tahun ke WhatsApp pelanggan dan berikan 1 cup kopi gratis tanpa mengurangi stempel reguler mereka.</p>
+          </div>
+        </div>
+      </div>
+      <div id="birthdayListContainer" class="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5"></div>
+    </section>
+
+    <!-- TAB 1: KASIR & STEMPEL CEPAT -->
+    <section id="view-kasir" class="space-y-4">
+      <div class="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200/80 shadow-sm">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-stone-100">
+          <div>
+            <h2 class="text-base font-bold text-stone-900">Kasir Stempel Cepat — Beli 9 Gratis 1</h2>
+            <p class="text-xs text-stone-500">Cari nama atau nomor WA pelanggan saat mereka membeli kopi, lalu klik <strong>+1 Stempel</strong>.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="relative flex-1 sm:w-64">
+              <input id="kasirSearchInput" type="text" placeholder="Cari nama, WA, lokasi, atau menu..." class="w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent" />
+              <svg class="w-4 h-4 text-stone-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <select id="kasirFilterSelect" class="px-3 py-2 text-xs sm:text-sm rounded-xl border border-stone-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-600">
+              <option value="all">Semua Member</option>
+              <option value="ready">Siap Klaim Gratis (9/9)</option>
+              <option value="almost">Hampir Penuh (7-8 Stempel)</option>
+              <option value="birthday">Ultah Bulan Ini</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Customer Stamp Cards Grid -->
+        <div id="kasirGridContainer" class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      </div>
+    </section>
+
+    <!-- TAB 2: KARTU DIGITAL MEMBER -->
+    <section id="view-kartu" class="hidden space-y-5">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+        <!-- Left Column: Member Selector & Controls -->
+        <div class="lg:col-span-5 bg-white rounded-2xl p-5 border border-stone-200/80 shadow-sm space-y-4">
+          <div>
+            <h2 class="text-base font-bold text-stone-900">Pilih &amp; Kelola Kartu Member</h2>
+            <p class="text-xs text-stone-500 mt-0.5">Tampilkan kartu digital kepada pelanggan atau kirim update stempel langsung ke WhatsApp mereka.</p>
+          </div>
+
+          <div>
+            <label for="cardMemberSelect" class="block text-xs font-semibold text-stone-700 mb-1">Pilih Pelanggan</label>
+            <select id="cardMemberSelect" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm font-medium bg-stone-50 focus:outline-none focus:ring-2 focus:ring-amber-600"></select>
+          </div>
+
+          <div>
+            <label for="stampMenuInput" class="block text-xs font-semibold text-stone-700 mb-1">Menu yang Dibeli Hari Ini (Opsional untuk Log)</label>
+            <input id="stampMenuInput" type="text" placeholder="Contoh: Kopi Susu Gula Aren / Matcha Oat" class="w-full px-3.5 py-2 rounded-xl border border-stone-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-600" />
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="grid grid-cols-2 gap-2.5 pt-1">
+            <button id="btnCardAddStamp" type="button" class="px-4 py-2.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-semibold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              <span>+1 Stempel Beli</span>
+            </button>
+            <button id="btnCardMinusStamp" type="button" class="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold text-xs sm:text-sm transition flex items-center justify-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
+              </svg>
+              <span>Koreksi (-1)</span>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <button id="btnCardClaimReward" type="button" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Tukar Gratis 1 Cup (9/9)</span>
+            </button>
+            <button id="btnCardClaimBirthday" type="button" class="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+              </svg>
+              <span>Klaim Gratis Ultah</span>
+            </button>
+          </div>
+
+          <!-- Share / Send to Customer -->
+          <div class="pt-3 border-t border-stone-200 space-y-2">
+            <p class="text-xs font-semibold text-stone-700">Kirim Kartu &amp; Status Stempel ke Pelanggan</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button id="btnSendWhatsAppCard" type="button" class="px-3.5 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <span>Kirim via WhatsApp</span>
+              </button>
+              <button id="btnCopyCardText" type="button" class="px-3.5 py-2.5 rounded-xl bg-stone-800 hover:bg-stone-900 text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                </svg>
+                <span>Salin Pesan Kartu</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Customer Mini Profile in Card View -->
+          <div id="cardMemberDetailBox" class="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/80 text-xs space-y-1.5"></div>
+        </div>
+
+        <!-- Right Column: Visual Digital Loyalty Card -->
+        <div class="lg:col-span-7 flex flex-col items-center">
+          <div class="w-full max-w-xl coffee-gradient card-pattern rounded-3xl p-6 sm:p-7 text-white shadow-2xl border border-amber-300/20 relative overflow-hidden">
+            <!-- Decorative Glow -->
+            <div class="absolute -right-12 -top-12 w-44 h-44 rounded-full bg-amber-400/10 blur-2xl pointer-events-none"></div>
+
+            <!-- Card Header -->
+            <div class="flex items-start justify-between gap-4 border-b border-white/15 pb-4">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-amber-400 text-stone-950 flex items-center justify-center font-black text-lg shadow-md">
+                  SJ
+                </div>
+                <div>
+                  <p class="text-[11px] uppercase tracking-widest text-amber-300 font-bold">Loyalty Member Card</p>
+                  <h3 class="text-xl sm:text-2xl font-extrabold tracking-tight">SEJUTA JIWA KELILING</h3>
+                  <p class="text-xs text-amber-100/80">Kopi Nikmat Setiap Hari • Beli 9 Gratis 1 Cup</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <span id="visualCardId" class="inline-block px-2.5 py-1 rounded-lg bg-black/30 border border-white/15 font-mono text-xs text-amber-200">SJ-001</span>
+                <p id="visualCardTier" class="text-[11px] text-amber-200/90 mt-1 font-medium">Teman Sejuta Jiwa</p>
+              </div>
+            </div>
+
+            <!-- Member Info Row -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 py-4 border-b border-white/15 text-xs">
+              <div>
+                <p class="text-amber-200/70 uppercase text-[10px] tracking-wider">Nama Pelanggan</p>
+                <p id="visualCardName" class="font-bold text-sm sm:text-base text-white truncate mt-0.5">-</p>
+              </div>
+              <div>
+                <p class="text-amber-200/70 uppercase text-[10px] tracking-wider">Menu Favorit</p>
+                <p id="visualCardFav" class="font-semibold text-white truncate mt-0.5">-</p>
+              </div>
+              <div class="col-span-2 sm:col-span-1">
+                <p class="text-amber-200/70 uppercase text-[10px] tracking-wider">Tanggal Lahir (Free Ultah)</p>
+                <p id="visualCardBirthday" class="font-semibold text-amber-200 mt-0.5">-</p>
+              </div>
+            </div>
+
+            <!-- 9 + 1 Stamp Slots Grid -->
+            <div class="my-5">
+              <div class="flex items-center justify-between mb-2.5">
+                <span class="text-xs font-semibold text-amber-100">Progres Stempel Kopi (Klik angka untuk atur cepat)</span>
+                <span id="visualStampCounter" class="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-amber-400 text-stone-950">0 / 9 Stempel</span>
+              </div>
+
+              <div id="visualStampGrid" class="grid grid-cols-5 gap-2.5 sm:gap-3"></div>
+            </div>
+
+            <!-- Card Footer Status -->
+            <div class="pt-3 border-t border-white/15 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div id="visualCardStatusText" class="font-medium text-amber-100">
+                Kumpulkan 9 stempel untuk klaim 1 Cup Gratis!
+              </div>
+              <div class="flex items-center gap-3 text-amber-200/90 font-semibold">
+                <span id="visualTotalCups">Total Beli: 0 Cup</span>
+                <span>•</span>
+                <span id="visualTotalClaimed">Gratis Diklaim: 0x</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- WhatsApp Message Preview Box -->
+          <div class="w-full max-w-xl mt-4 bg-white rounded-2xl p-4 border border-stone-200 shadow-sm">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs font-bold text-stone-700">Preview Pesan WhatsApp Otomatis untuk Pelanggan</span>
+              <span class="text-[11px] text-stone-400">Siap kirim ke WA</span>
+            </div>
+            <pre id="whatsappPreviewBox" class="text-xs text-stone-700 bg-stone-50 p-3 rounded-xl border border-stone-200 whitespace-pre-wrap font-sans leading-relaxed"></pre>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 3: DATABASE PELANGGAN & ULANG TAHUN -->
+    <section id="view-database" class="hidden space-y-4">
+      <div class="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200/80 shadow-sm space-y-4">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-stone-100">
+          <div>
+            <h2 class="text-base font-bold text-stone-900">Database Lengkap Pelanggan Sejuta Jiwa Keliling</h2>
+            <p class="text-xs text-stone-500">Kelola profil lengkap pelanggan, lokasi mangkal favorit, preferensi kopi, dan jadwal ulang tahun untuk promo gratis.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <input id="dbSearchInput" type="text" placeholder="Cari nama, WA, alamat, menu..." class="px-3 py-2 text-xs sm:text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-600" />
+            <select id="dbMonthFilter" class="px-3 py-2 text-xs sm:text-sm rounded-xl border border-stone-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-600">
+              <option value="all">Semua Bulan Lahir</option>
+              <option value="1">Januari</option>
+              <option value="2">Februari</option>
+              <option value="3">Maret</option>
+              <option value="4">April</option>
+              <option value="5">Mei</option>
+              <option value="6">Juni</option>
+              <option value="7">Juli</option>
+              <option value="8">Agustus</option>
+              <option value="9">September</option>
+              <option value="10">Oktober</option>
+              <option value="11">November (Bulan Ini)</option>
+              <option value="12">Desember</option>
+            </select>
+            <button id="btnBackupJSON" type="button" class="px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold text-xs transition">
+              Backup JSON
+            </button>
+            <label class="px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold text-xs transition cursor-pointer">
+              <span>Impor JSON</span>
+              <input id="inputRestoreJSON" type="file" accept=".json" class="hidden" />
+            </label>
+          </div>
+        </div>
+
+        <!-- Responsive Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-stone-200 text-[11px] font-bold uppercase text-stone-500 bg-stone-50/70">
+                <th class="py-3 px-3">Member</th>
+                <th class="py-3 px-3">WhatsApp &amp; Lokasi Langganan</th>
+                <th class="py-3 px-3">Tanggal Lahir &amp; Status Ultah</th>
+                <th class="py-3 px-3">Menu Favorit &amp; Catatan</th>
+                <th class="py-3 px-3 text-center">Stempel</th>
+                <th class="py-3 px-3 text-center">Total Beli</th>
+                <th class="py-3 px-3 text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="dbTableBody" class="divide-y divide-stone-200/70 text-xs sm:text-sm"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: RIWAYAT TRANSAKSI & KLAIM -->
+    <section id="view-riwayat" class="hidden space-y-4">
+      <div class="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200/80 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-100">
+          <div>
+            <h2 class="text-base font-bold text-stone-900">Riwayat Stempel &amp; Klaim Kopi Gratis</h2>
+            <p class="text-xs text-stone-500">Catatan otomatis setiap penambahan stempel pembelian, klaim gratis 9 stempel, dan klaim gratis ulang tahun.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <select id="logFilterType" class="px-3 py-2 text-xs sm:text-sm rounded-xl border border-stone-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-600">
+              <option value="all">Semua Aktivitas</option>
+              <option value="STAMP">Tambah Stempel (+1)</option>
+              <option value="REWARD_9">Klaim Beli 9 Gratis 1</option>
+              <option value="BIRTHDAY_FREE">Klaim Gratis Ultah</option>
+            </select>
+            <button id="btnClearLogs" type="button" class="px-3 py-2 rounded-xl bg-stone-100 hover:bg-rose-50 hover:text-rose-700 text-stone-600 font-semibold text-xs transition">
+              Bersihkan Log
+            </button>
+          </div>
+        </div>
+
+        <div id="logListContainer" class="divide-y divide-stone-100"></div>
+      </div>
+    </section>
+
+    <!-- TAB 5: QR CODE GEROBAK & GOOGLE FORM OTOMATIS -->
+    <section id="view-qrcode" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+        <!-- Left Column: QR Settings & Auto-Google Form Script -->
+        <div class="lg:col-span-6 space-y-5">
+          <div class="bg-white rounded-2xl p-5 border border-stone-200/80 shadow-sm space-y-4">
+            <div>
+              <span class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900">Siap Tempel di Gerobak</span>
+              <h2 class="text-base sm:text-lg font-extrabold text-stone-900 mt-1">Generator Poster QR Code Member Sejuta Jiwa Keliling</h2>
+              <p class="text-xs text-stone-500 mt-0.5">Masukkan link Google Form pendaftaranmu di bawah ini. QR Code di samping akan otomatis berubah dan siap diunduh sebagai gambar PNG atau dicetak untuk ditempel di gerobak kopi.</p>
+            </div>
+
+            <div>
+              <label for="qrUrlInput" class="block text-xs font-semibold text-stone-700 mb-1">Tautan Tujuan QR Code (Link Google Form / Link Pendaftaran WA)</label>
+              <input id="qrUrlInput" type="url" value="https://docs.google.com/spreadsheets/d/167cBPm4BW1OnUHXEexm1_hlXxp4Gtl1_PFsZaN8bRes/edit" placeholder="Tempel link Google Form (https://forms.gle/...)" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-600" />
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label for="qrPromoTitleInput" class="block text-xs font-semibold text-stone-700 mb-1">Headline Promo Stiker</label>
+                <input id="qrPromoTitleInput" type="text" value="DAFTAR MEMBER GRATIS!" class="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-600" />
+              </div>
+              <div>
+                <label for="qrWaAdminInput" class="block text-xs font-semibold text-stone-700 mb-1">Atau Gunakan Mode Daftar via WA Admin</label>
+                <button id="btnUseWaLinkForQr" type="button" class="w-full py-2 px-3 rounded-xl bg-green-50 hover:bg-green-100 text-green-800 border border-green-300 font-semibold text-xs transition">
+                  📲 Set QR ke Chat Daftar WA Otomatis
+                </button>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2.5 pt-2 border-t border-stone-100">
+              <button id="btnDownloadPosterPng" type="button" class="flex-1 py-2.5 px-4 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs sm:text-sm shadow transition flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <span>Unduh Gambar Poster QR (PNG)</span>
+              </button>
+              <button id="btnPrintPoster" type="button" class="py-2.5 px-4 rounded-xl bg-stone-800 hover:bg-stone-900 text-white font-semibold text-xs sm:text-sm transition">
+                🖨️ Cetak Stiker
+              </button>
+            </div>
+          </div>
+
+          <!-- 1-Click Google Apps Script Box -->
+          <div class="bg-white rounded-2xl p-5 border border-stone-200/80 shadow-sm space-y-3">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <span class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900">Otomatisasi 1-Klik di Google Sheets</span>
+                <h3 class="text-sm sm:text-base font-extrabold text-stone-900 mt-1">Skrip Pembuat Google Form Otomatis</h3>
+                <p class="text-xs text-stone-500 mt-0.5">Salin kode ini ke menu <strong>Extensions &gt; Apps Script</strong> di Google Sheets-mu, lalu klik <strong>Run</strong> pada fungsi <code>setupOtomatisSejutaJiwa</code>. Google Form akan langsung terbuat dan terhubung otomatis ke tab database!</p>
+              </div>
+              <button id="btnCopyAppsScript" type="button" class="shrink-0 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition">
+                Salin Kode Script
+              </button>
+            </div>
+
+            <pre id="appsScriptCodeBox" class="text-[11px] bg-stone-900 text-amber-100 p-3.5 rounded-xl overflow-x-auto max-h-60 leading-relaxed font-mono">function setupOtomatisSejutaJiwa() {
+  const ss = SpreadsheetApp.openById('167cBPm4BW1OnUHXEexm1_hlXxp4Gtl1_PFsZaN8bRes');
+  const form = FormApp.create('Pendaftaran Member Loyalty - Sejuta Jiwa Keliling');
+  form.setDescription('Daftar Member Gratis Sejuta Jiwa Keliling! Kumpulkan 9 Stempel Gratis 1 Cup Kopi + Gratis 1 Cup Kopi di Hari Ulang Tahunmu!');
+  form.setConfirmationMessage('Terima kasih sudah bergabung di Member Sejuta Jiwa Keliling! Stempel pertamamu sudah tercatat.');
+
+  form.addTextItem().setTitle('Nama Lengkap').setRequired(true);
+  form.addTextItem().setTitle('Nomor WhatsApp (Aktif)').setRequired(true);
+  form.addDateItem().setTitle('Tanggal Lahir (Untuk Promo Gratis Kopi Ultah)').setRequired(true);
+  form.addTextItem().setTitle('Lokasi / Titik Mangkal Langganan').setRequired(false);
+  form.addMultipleChoiceItem()
+      .setTitle('Menu Kopi Favorit')
+      .setChoiceValues(['Kopi Susu Gula Aren', 'Cold Brew Black 250ml', 'Matcha Latte Oatmilk', 'Americano Double Shot', 'Kopi Susu Pandan', 'Caramel Macchiato'])
+      .showOtherOption(true)
+      .setRequired(true);
+  form.addTextItem().setTitle('Catatan Preferensi (Takaran Gula / Es)').setRequired(false);
+
+  form.setDestination(FormApp.DestinationType.SPREADSHEET, ss.getId());
+  Logger.log('Link Google Form Pelanggan: ' + form.getPublishedUrl());
+}</pre>
+          </div>
+        </div>
+
+        <!-- Right Column: Live Printable Poster Standee Preview -->
+        <div class="lg:col-span-6 flex flex-col items-center">
+          <div id="printablePosterCard" class="w-full max-w-md coffee-gradient card-pattern rounded-3xl p-6 sm:p-8 text-white shadow-2xl border-4 border-amber-300/40 text-center space-y-5 relative overflow-hidden">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-400 text-stone-950 font-extrabold text-xs uppercase tracking-wider shadow">
+              <span>☕ Kopi Sejuta Jiwa Keliling</span>
+            </div>
+
+            <div>
+              <h3 id="posterHeadlineText" class="text-2xl sm:text-3xl font-black tracking-tight text-amber-300 uppercase">DAFTAR MEMBER GRATIS!</h3>
+              <p class="text-xs sm:text-sm text-amber-100 mt-1 font-medium">Scan QR Code di bawah ini sambil nunggu kopimu diseduh</p>
+            </div>
+
+            <!-- White QR Frame -->
+            <div class="bg-white rounded-3xl p-5 mx-auto w-60 h-60 sm:w-64 sm:h-64 flex flex-col items-center justify-center shadow-xl border-4 border-amber-400">
+              <div id="qrCodeCanvasContainer" class="w-48 h-48 flex items-center justify-center"></div>
+              <p class="text-[10px] font-extrabold text-stone-700 uppercase tracking-widest mt-1">SCAN DENGAN KAMERA / QRIS / WA</p>
+            </div>
+
+            <!-- Benefits Callout -->
+            <div class="grid grid-cols-2 gap-3 text-left">
+              <div class="bg-black/30 border border-white/15 rounded-2xl p-3">
+                <p class="text-lg">☕ 9 + 1</p>
+                <p class="text-xs font-extrabold text-amber-300 mt-0.5">Beli 9 Gratis 1 Cup</p>
+                <p class="text-[11px] text-amber-100/80">Bebas pilih varian menu favoritmu tanpa batas waktu</p>
+              </div>
+              <div class="bg-black/30 border border-white/15 rounded-2xl p-3">
+                <p class="text-lg">🎂 Free Ultah</p>
+                <p class="text-xs font-extrabold text-rose-300 mt-0.5">Gratis Kopi Saat Ultah</p>
+                <p class="text-[11px] text-amber-100/80">Dapat voucher 1 cup kopi gratis tepat di hari ulang tahunmu</p>
+              </div>
+            </div>
+
+            <div class="pt-2 border-t border-white/15 text-[11px] text-amber-200/90 font-medium">
+              Tanpa Kartu Fisik • Tanpa Install Aplikasi • Update Stempel via WhatsApp
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: ADD / EDIT CUSTOMER -->
+  <div id="customerModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-stone-950/60 backdrop-blur-xs p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-stone-200 my-8">
+      <div class="flex items-center justify-between pb-3 border-b border-stone-100">
+        <div>
+          <h3 id="modalTitle" class="text-base sm:text-lg font-extrabold text-stone-900">Tambah Pelanggan Baru</h3>
+          <p class="text-xs text-stone-500">Simpan data lengkap member Sejuta Jiwa Keliling</p>
+        </div>
+        <button id="btnCloseModal" type="button" class="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-600">
+          ✕
+        </button>
+      </div>
+
+      <form id="customerForm" class="mt-4 space-y-3.5">
+        <input type="hidden" id="formCustomerId" />
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="formName" class="block text-xs font-semibold text-stone-700 mb-1">Nama Lengkap *</label>
+            <input id="formName" type="text" required placeholder="Contoh: Rina Amelia" class="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-600" />
+          </div>
+          <div>
+            <label for="formPhone" class="block text-xs font-semibold text-stone-700 mb-1">Nomor WhatsApp *</label>
+            <input id="formPhone" type="text" required placeholder="Contoh: 081234567890" class="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-600" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="formDob" class="block text-xs font-semibold text-stone-700 mb-1">Tanggal Lahir (Untuk Free Ultah) *</label>
+            <input id="formDob" type="date" required class="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-600" />
+          </div>
+          <div>
+            <label for="formLocation" class="block text-xs font-semibold text-stone-700 mb-1">Lokasi / Titik Mangkal Langganan</label>
+            <input id="formLocation" type="text" placeholder="Contoh: Alun-Alun Sidoarjo / Kampus UMSIDA" class="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-600" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="formFavMenu" class="block text-xs font-semibold text-stone-700 mb-1">Menu Kopi Favorit</label>
+            <input id="formFavMenu" type="text" placeholder="Contoh: Kopi Susu Gula Aren" class="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-600" />
+          </div>
+          <div>
+            <label for="formStamps" class="block text-xs font-semibold text-stone-700 mb-1">Stempel Aktif Saat Ini (0 - 9)</label>
+            <input id="formStamps" type="number" min="0" max="9" value="1" class="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-600" />
+          </div>
+        </div>
+
+        <div>
+          <label for="formNotes" class="block text-xs font-semibold text-stone-700 mb-1">Catatan Preferensi (Takaran Gula/Es, Jam Langganan, dll.)</label>
+          <textarea id="formNotes" rows="2" placeholder="Contoh: Suka less sugar, es batu normal, biasa beli jam 9 pagi" class="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-600"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-stone-100">
+          <button id="btnCancelModal" type="button" class="px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold text-xs sm:text-sm">
+            Batal
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-semibold text-xs sm:text-sm shadow">
+            Simpan Data Pelanggan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIRMATION DIALOG (No native confirm/alert) -->
+  <div id="confirmModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-stone-950/60 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-stone-200 space-y-4">
+      <h3 id="confirmModalTitle" class="text-base font-bold text-stone-900">Konfirmasi</h3>
+      <p id="confirmModalMessage" class="text-xs sm:text-sm text-stone-600"></p>
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button id="btnConfirmCancel" type="button" class="px-3.5 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold text-xs">
+          Batal
+        </button>
+        <button id="btnConfirmOk" type="button" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs shadow">
+          Ya, Lanjutkan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toastBox" class="fixed bottom-5 right-5 z-50 hidden max-w-sm bg-stone-900 text-white px-4 py-3 rounded-2xl shadow-xl border border-stone-700 flex items-center gap-2.5 text-xs sm:text-sm font-medium">
+    <span id="toastIcon" class="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0"></span>
+    <span id="toastText">Berhasil disimpan</span>
+  </div>
+
+  <script>
+    (function () {
+      const STORAGE_KEY_CUSTOMERS = 'sejuta_jiwa_loyalty_customers_v1';
+      const STORAGE_KEY_LOGS = 'sejuta_jiwa_loyalty_logs_v1';
+
+      function getTodayParts() {
+        const now = new Date();
+        return {
+          year: now.getFullYear(),
+          month: now.getMonth() + 1,
+          day: now.getDate(),
+          isoDate: now.toISOString().slice(0, 10)
+        };
+      }
+
+      const defaultCustomers = [
+        {
+          id: 'SJ-001',
+          name: 'Nadia Putri Rahmawati',
+          phone: '081234567891',
+          dob: '1999-11-05',
+          location: 'Area Kampus UMSIDA Buduran',
+          favMenu: 'Kopi Susu Gula Aren',
+          notes: 'Less sugar, normal ice. Langganan pagi jam 08.30',
+          stamps: 9,
+          totalCups: 18,
+          rewardsClaimed: 1,
+          lastBirthdayClaimYear: null,
+          joinedAt: '2026-10-01'
+        },
+        {
+          id: 'SJ-002',
+          name: 'Dimas Wahyu Pratama',
+          phone: '081357924680',
+          dob: '1997-11-08',
+          location: 'Alun-Alun Sidoarjo',
+          favMenu: 'Cold Brew Black 250ml',
+          notes: 'Tanpa gula sama sekali, sering beli 2 botol',
+          stamps: 7,
+          totalCups: 16,
+          rewardsClaimed: 1,
+          lastBirthdayClaimYear: null,
+          joinedAt: '2026-10-05'
+        },
+        {
+          id: 'SJ-003',
+          name: 'Rizky Amelia Sari',
+          phone: '085732109876',
+          dob: '2001-11-05',
+          location: 'Perum Pondok Jati',
+          favMenu: 'Matcha Latte Oatmilk',
+          notes: 'Extra ice, suka tambah croissant kalau ada',
+          stamps: 5,
+          totalCups: 5,
+          rewardsClaimed: 0,
+          lastBirthdayClaimYear: null,
+          joinedAt: '2026-10-14'
+        },
+        {
+          id: 'SJ-004',
+          name: 'Bagus Setiawan',
+          phone: '082143658709',
+          dob: '1995-03-19',
+          location: 'Ruko Gateway Waru',
+          favMenu: 'Americano Double Shot',
+          notes: 'Hot / Panas, biasa pesan bareng teman kantor',
+          stamps: 9,
+          totalCups: 27,
+          rewardsClaimed: 2,
+          lastBirthdayClaimYear: null,
+          joinedAt: '2026-09-20'
+        },
+        {
+          id: 'SJ-005',
+          name: 'Ayu Lestari Ningrum',
+          phone: '087811223344',
+          dob: '2002-11-11',
+          location: 'GOR Delta Sidoarjo',
+          favMenu: 'Kopi Susu Pandan',
+          notes: 'Normal sugar, suka beli sore habis olahraga',
+          stamps: 8,
+          totalCups: 8,
+          rewardsClaimed: 0,
+          lastBirthdayClaimYear: null,
+          joinedAt: '2026-10-22'
+        },
+        {
+          id: 'SJ-006',
+          name: 'Fajar Nugroho',
+          phone: '081908765432',
+          dob: '1998-07-24',
+          location: 'Stasiun Sidoarjo',
+          favMenu: 'Caramel Macchiato',
+          notes: 'Extra caramel drizzle, take away',
+          stamps: 3,
+          totalCups: 12,
+          rewardsClaimed: 1,
+          lastBirthdayClaimYear: null,
+          joinedAt: '2026-10-26'
+        }
+      ];
+
+      const defaultLogs = [
+        {
+          id: 'LOG-101',
+          timestamp: '05 Nov 2026, 08:45',
+          customerId: 'SJ-001',
+          customerName: 'Nadia Putri Rahmawati',
+          type: 'STAMP',
+          detail: '+1 Stempel (Kopi Susu Gula Aren) — Stempel penuh 9/9, siap klaim gratis!'
+        },
+        {
+          id: 'LOG-102',
+          timestamp: '04 Nov 2026, 16:20',
+          customerId: 'SJ-005',
+          customerName: 'Ayu Lestari Ningrum',
+          type: 'STAMP',
+          detail: '+1 Stempel (Kopi Susu Pandan) — Progres 8/9 stempel'
+        },
+        {
+          id: 'LOG-103',
+          timestamp: '03 Nov 2026, 10:15',
+          customerId: 'SJ-004',
+          customerName: 'Bagus Setiawan',
+          type: 'REWARD_9',
+          detail: 'Tukar 9 Stempel: Gratis 1 Cup Americano Double Shot'
+        }
+      ];
+
+      let customers = [];
+      let logs = [];
+      let selectedCardCustomerId = 'SJ-001';
+      let pendingConfirmCallback = null;
+
+      function loadState() {
+        try {
+          const savedCust = localStorage.getItem(STORAGE_KEY_CUSTOMERS);
+          const savedLogs = localStorage.getItem(STORAGE_KEY_LOGS);
+          customers = savedCust ? JSON.parse(savedCust) : JSON.parse(JSON.stringify(defaultCustomers));
+          logs = savedLogs ? JSON.parse(savedLogs) : JSON.parse(JSON.stringify(defaultLogs));
+        } catch (err) {
+          customers = JSON.parse(JSON.stringify(defaultCustomers));
+          logs = JSON.parse(JSON.stringify(defaultLogs));
+        }
+        if (customers.length > 0 && !customers.some(c => c.id === selectedCardCustomerId)) {
+          selectedCardCustomerId = customers[0].id;
+        }
+      }
+
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY_CUSTOMERS, JSON.stringify(customers));
+          localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
+        } catch (err) {
+          // Ignore storage error in restricted iframe
+        }
+      }
+
+      function showToast(message, colorClass) {
+        const toast = document.getElementById('toastBox');
+        const toastText = document.getElementById('toastText');
+        const toastIcon = document.getElementById('toastIcon');
+        toastText.textContent = message;
+        toastIcon.className = 'w-2.5 h-2.5 rounded-full shrink-0 ' + (colorClass || 'bg-amber-400');
+        toast.classList.remove('hidden');
+        clearTimeout(window.__toastTimer);
+        window.__toastTimer = setTimeout(() => {
+          toast.classList.add('hidden');
+        }, 3200);
+      }
+
+      function openConfirm(title, message, onConfirm) {
+        document.getElementById('confirmModalTitle').textContent = title;
+        document.getElementById('confirmModalMessage').textContent = message;
+        pendingConfirmCallback = onConfirm;
+        const modal = document.getElementById('confirmModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+
+      function closeConfirm() {
+        const modal = document.getElementById('confirmModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        pendingConfirmCallback = null;
+      }
+
+      function formatTimeNow() {
+        const d = new Date();
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        const day = String(d.getDate()).padStart(2, '0');
+        const mon = months[d.getMonth()];
+        const yr = d.getFullYear();
+        const hr = String(d.getHours()).padStart(2, '0');
+        const min = String(d.getMinutes()).padStart(2, '0');
+        return `${day} ${mon} ${yr}, ${hr}:${min}`;
+      }
+
+      function formatDobReadable(dobStr) {
+        if (!dobStr) return '-';
+        const parts = dobStr.split('-');
+        if (parts.length !== 3) return dobStr;
+        const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        const mIdx = parseInt(parts[1], 10) - 1;
+        return `${parseInt(parts[2], 10)} ${months[mIdx] || parts[1]} ${parts[0]}`;
+      }
+
+      function getBirthdayStatus(dobStr, lastClaimYear) {
+        if (!dobStr) return { daysUntil: 999, isToday: false, isWithin7Days: false, isThisMonth: false, claimedThisYear: false };
+        const today = getTodayParts();
+        const parts = dobStr.split('-');
+        const bMonth = parseInt(parts[1], 10);
+        const bDay = parseInt(parts[2], 10);
+
+        const nowDate = new Date(today.year, today.month - 1, today.day);
+        let nextBday = new Date(today.year, bMonth - 1, bDay);
+        if (nextBday < nowDate) {
+          nextBday = new Date(today.year + 1, bMonth - 1, bDay);
+        }
+        const diffDays = Math.round((nextBday - nowDate) / (1000 * 60 * 60 * 24));
+        const isToday = (bMonth === today.month && bDay === today.day);
+        const isThisMonth = (bMonth === today.month);
+        const claimedThisYear = (lastClaimYear === today.year);
+
+        return {
+          daysUntil: diffDays,
+          isToday: isToday,
+          isWithin7Days: diffDays >= 0 && diffDays <= 7,
+          isThisMonth: isThisMonth,
+          claimedThisYear: claimedThisYear,
+          bMonth: bMonth,
+          bDay: bDay
+        };
+      }
+
+      function normalizeWaNumber(phone) {
+        const digits = String(phone || '').replace(/\D/g, '');
+        if (digits.startsWith('0')) return '62' + digits.slice(1);
+        if (digits.startsWith('62')) return digits;
+        return '62' + digits;
+      }
+
+      function buildAsciiStampBar(stamps) {
+        let bar = '';
+        for (let i = 1; i <= 9; i++) {
+          bar += i <= stamps ? '☕' : '⚪';
+        }
+        return bar;
+      }
+
+      function buildWhatsAppMessage(customer, mode) {
+        const bStatus = getBirthdayStatus(customer.dob, customer.lastBirthdayClaimYear);
+        const stampBar = buildAsciiStampBar(customer.stamps);
+        const remaining = Math.max(0, 9 - customer.stamps);
+
+        if (mode === 'birthday' || (bStatus.isToday && !bStatus.claimedThisYear && mode !== 'regular')) {
+          return (
+            `Halo Kak *${customer.name}*! 🎂🎉\n` +
+            `Selamat Ulang Tahun dari *Sejuta Jiwa Keliling*! ☕✨\n\n` +
+            `Spesial di hari ulang tahun Kakak, ada *GRATIS 1 CUP KOPI* bebas pilih menu favorit (${customer.favMenu || 'All Variant'}) tanpa potong stempel!\n\n` +
+            `📌 *ID Member:* ${customer.id}\n` +
+            `🎁 *Voucher:* FREE KOPI ULANG TAHUN\n` +
+            `☕ *Stempel Saat Ini:* ${customer.stamps}/9 [${stampBar}]\n\n` +
+            `Tunjukkan pesan ini ke rider Sejuta Jiwa Keliling saat kita lewat di *${customer.location || 'lokasi langganan'}* ya Kak! Sehat & bahagia selalu! 🙏😊`
+          );
+        }
+
+        const statusLine = customer.stamps >= 9
+          ? `🎉 *SELAMAT!* Stempel Kakak sudah *9/9 PENUH*! Kakak berhak klaim *GRATIS 1 CUP KOPI* di pembelian berikutnya!`
+          : `Tinggal *${remaining} stempel lagi* untuk dapat *GRATIS 1 Cup Kopi*!`;
+
+        return (
+          `Halo Kak *${customer.name}*! ☕✨\n` +
+          `Terima kasih sudah jajan di *Sejuta Jiwa Keliling*.\n\n` +
+          `💳 *KARTU LOYALTY DIGITAL*\n` +
+          `• ID Member: *${customer.id}*\n` +
+          `• Menu Favorit: ${customer.favMenu || '-'}\n` +
+          `• Progres Stempel: *${customer.stamps} / 9*\n` +
+          `[${stampBar}] 👉 🎁 Gratis 1 Cup\n\n` +
+          `${statusLine}\n` +
+          `(Plus: Gratis 1 Cup spesial setiap hari ulang tahun Kakak tanggal ${formatDobReadable(customer.dob).slice(0, -5)}! 🎂)\n\n` +
+          `Sampai ketemu lagi di *${customer.location || 'rute keliling kami'}*! 🙏🛵`
+        );
+      }
+
+      function addLog(customer, type, detail) {
+        logs.unshift({
+          id: 'LOG-' + Date.now(),
+          timestamp: formatTimeNow(),
+          customerId: customer.id,
+          customerName: customer.name,
+          type: type,
+          detail: detail
+        });
+      }
+
+      function addStamp(customerId, customMenu) {
+        const cust = customers.find(c => c.id === customerId);
+        if (!cust) return;
+        if (cust.stamps >= 9) {
+          showToast(`Stempel ${cust.name} sudah penuh (9/9)! Silakan klik Klaim Gratis 1 Cup terlebih dahulu.`, 'bg-emerald-400');
+          return;
+        }
+        cust.stamps += 1;
+        cust.totalCups = (cust.totalCups || 0) + 1;
+        const menuUsed = (customMenu && customMenu.trim()) ? customMenu.trim() : (cust.favMenu || 'Kopi Sejuta Jiwa');
+        const note = cust.stamps === 9
+          ? `+1 Stempel (${menuUsed}) — Stempel penuh 9/9, siap klaim gratis!`
+          : `+1 Stempel (${menuUsed}) — Progres ${cust.stamps}/9 stempel`;
+        addLog(cust, 'STAMP', note);
+        saveState();
+        renderAll();
+        showToast(`+1 Stempel untuk ${cust.name} (${cust.stamps}/9)`, 'bg-amber-400');
+      }
+
+      function minusStamp(customerId) {
+        const cust = customers.find(c => c.id === customerId);
+        if (!cust) return;
+        if (cust.stamps <= 0) {
+          showToast(`Stempel ${cust.name} sudah 0.`, 'bg-stone-400');
+          return;
+        }
+        cust.stamps -= 1;
+        cust.totalCups = Math.max(0, (cust.totalCups || 1) - 1);
+        addLog(cust, 'STAMP', `Koreksi -1 Stempel — Progres sekarang ${cust.stamps}/9`);
+        saveState();
+        renderAll();
+        showToast(`Stempel ${cust.name} dikurangi menjadi ${cust.stamps}/9`, 'bg-stone-400');
+      }
+
+      function setExactStamp(customerId, targetStamp) {
+        const cust = customers.find(c => c.id === customerId);
+        if (!cust) return;
+        const diff = targetStamp - cust.stamps;
+        if (diff === 0) return;
+        cust.stamps = targetStamp;
+        if (diff > 0) cust.totalCups = (cust.totalCups || 0) + diff;
+        addLog(cust, 'STAMP', `Atur stempel langsung ke ${cust.stamps}/9`);
+        saveState();
+        renderAll();
+        showToast(`Stempel ${cust.name} diatur ke ${cust.stamps}/9`, 'bg-amber-400');
+      }
+
+      function claimReward9(customerId) {
+        const cust = customers.find(c => c.id === customerId);
+        if (!cust) return;
+        if (cust.stamps < 9) {
+          showToast(`Belum cukup! ${cust.name} baru mengumpulkan ${cust.stamps}/9 stempel.`, 'bg-rose-400');
+          return;
+        }
+        cust.stamps = 0;
+        cust.rewardsClaimed = (cust.rewardsClaimed || 0) + 1;
+        addLog(cust, 'REWARD_9', `Klaim Reward Beli 9 Gratis 1 Cup (${cust.favMenu || 'Bebas Pilih'}) — Stempel di-reset ke 0/9`);
+        saveState();
+        renderAll();
+        showToast(`Selamat! 1 Cup Gratis untuk ${cust.name} berhasil diklaim & stempel di-reset 0/9!`, 'bg-emerald-400');
+      }
+
+      function claimBirthdayFree(customerId) {
+        const cust = customers.find(c => c.id === customerId);
+        if (!cust) return;
+        const today = getTodayParts();
+        if (cust.lastBirthdayClaimYear === today.year) {
+          showToast(`Hadiah ulang tahun ${cust.name} untuk tahun ${today.year} sudah diklaim.`, 'bg-rose-400');
+          return;
+        }
+        cust.lastBirthdayClaimYear = today.year;
+        cust.rewardsClaimed = (cust.rewardsClaimed || 0) + 1;
+        addLog(cust, 'BIRTHDAY_FREE', `Klaim Gratis Kopi Ulang Tahun (${today.year}) untuk ${cust.name} — Stempel tetap ${cust.stamps}/9`);
+        saveState();
+        renderAll();
+        showToast(`Kopi Gratis Ulang Tahun untuk ${cust.name} berhasil diklaim!`, 'bg-rose-400');
+      }
+
+      function openWhatsApp(customer, mode) {
+        const waNumber = normalizeWaNumber(customer.phone);
+        const text = buildWhatsAppMessage(customer, mode);
+        const url = `https://wa.me/${waNumber}?text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+
+      function copyToClipboard(text, successMsg) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          showToast(successMsg || 'Teks berhasil disalin ke clipboard!', 'bg-emerald-400');
+        } catch (err) {
+          showToast('Gagal menyalin teks.', 'bg-rose-400');
+        }
+        document.body.removeChild(textarea);
+      }
+
+      function renderKPIsAndBirthdays() {
+        const today = getTodayParts();
+        const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        document.getElementById('currentDateLabel').textContent = `Hari Ini: ${today.day} ${months[today.month - 1]} ${today.year}`;
+
+        const totalMembers = customers.length;
+        const readyClaim = customers.filter(c => c.stamps >= 9).length;
+        let totalCups = 0;
+        let totalRewards = 0;
+        const upcomingBirthdays = [];
+
+        customers.forEach(c => {
+          totalCups += (c.totalCups || 0);
+          totalRewards += (c.rewardsClaimed || 0);
+          const bStatus = getBirthdayStatus(c.dob, c.lastBirthdayClaimYear);
+          if (bStatus.isWithin7Days) {
+            upcomingBirthdays.push({ customer: c, status: bStatus });
+          }
+        });
+
+        upcomingBirthdays.sort((a, b) => a.status.daysUntil - b.status.daysUntil);
+
+        document.getElementById('statTotalCustomers').textContent = totalMembers;
+        document.getElementById('statReadyClaim').textContent = readyClaim;
+        document.getElementById('statBirthdaySoon').textContent = upcomingBirthdays.length;
+        document.getElementById('badgeBirthdayCount').textContent = upcomingBirthdays.length;
+        document.getElementById('statTotalCups').textContent = `${totalCups} Cup`;
+        document.getElementById('statTotalRewardsSub').textContent = `${totalRewards} cup gratis telah diklaim`;
+
+        const container = document.getElementById('birthdayListContainer');
+        if (upcomingBirthdays.length === 0) {
+          container.innerHTML = `
+            <div class="col-span-full text-xs text-stone-500 bg-white/80 rounded-xl px-3.5 py-2.5 border border-rose-100">
+              Tidak ada pelanggan yang berulang tahun dalam 7 hari ke depan. Kamu bisa menambah pelanggan baru di tab Database.
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = upcomingBirthdays.map(item => {
+          const c = item.customer;
+          const st = item.status;
+          const badgeText = st.isToday ? '🎂 ULANG TAHUN HARI INI!' : `🎉 Dalam ${st.daysUntil} hari (${formatDobReadable(c.dob).slice(0, -5)})`;
+          const badgeStyle = st.isToday
+            ? 'bg-rose-600 text-white'
+            : 'bg-amber-200 text-amber-950';
+
+          return `
+            <div class="bg-white rounded-xl p-3 border ${st.isToday ? 'border-rose-400 ring-2 ring-rose-200/70' : 'border-rose-200/80'} shadow-xs flex flex-col justify-between gap-2.5">
+              <div>
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full ${badgeStyle}">${badgeText}</span>
+                  <span class="text-[11px] font-mono text-stone-400">${c.id}</span>
+                </div>
+                <p class="font-bold text-sm text-stone-900 mt-1.5">${escapeHtml(c.name)}</p>
+                <p class="text-xs text-stone-500">Favorit: <strong class="text-stone-700">${escapeHtml(c.favMenu || '-')}</strong> • ${escapeHtml(c.location || '-')}</p>
+              </div>
+              <div class="flex items-center gap-1.5 pt-1">
+                ${
+                  st.claimedThisYear
+                    ? `<span class="flex-1 text-center py-1.5 px-2 rounded-lg bg-stone-100 text-stone-500 font-semibold text-xs">✓ Gratis Ultah Sudah Diklaim</span>`
+                    : `<button type="button" data-action="claim-bday" data-id="${c.id}" class="flex-1 py-1.5 px-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs transition">
+                        🎁 Klaim Free Kopi
+                      </button>`
+                }
+                <button type="button" data-action="wa-bday" data-id="${c.id}" class="py-1.5 px-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold text-xs transition" title="Kirim Ucapan & Voucher ke WA">
+                  Kirim WA
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      function renderKasirGrid() {
+        const query = (document.getElementById('kasirSearchInput').value || '').toLowerCase().trim();
+        const filter = document.getElementById('kasirFilterSelect').value;
+        const container = document.getElementById('kasirGridContainer');
+
+        const filtered = customers.filter(c => {
+          const matchText =
+            c.name.toLowerCase().includes(query) ||
+            c.phone.toLowerCase().includes(query) ||
+            (c.location || '').toLowerCase().includes(query) ||
+            (c.favMenu || '').toLowerCase().includes(query) ||
+            c.id.toLowerCase().includes(query);
+          if (!matchText) return false;
+
+          const bStatus = getBirthdayStatus(c.dob, c.lastBirthdayClaimYear);
+          if (filter === 'ready') return c.stamps >= 9;
+          if (filter === 'almost') return c.stamps >= 7 && c.stamps < 9;
+          if (filter === 'birthday') return bStatus.isThisMonth;
+          return true;
+        });
+
+        if (filtered.length === 0) {
+          container.innerHTML = `
+            <div class="col-span-full text-center py-10 text-stone-500 text-sm">
+              Tidak ada pelanggan yang cocok dengan pencarian. Klik <strong>+ Member Baru</strong> di kanan atas untuk mendaftarkan pelanggan.
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = filtered.map(c => {
+          const bStatus = getBirthdayStatus(c.dob, c.lastBirthdayClaimYear);
+          const isFull = c.stamps >= 9;
+
+          let miniStampsHtml = '';
+          for (let i = 1; i <= 9; i++) {
+            const filled = i <= c.stamps;
+            miniStampsHtml += `
+              <div class="h-7 rounded-lg flex items-center justify-center text-xs font-bold border ${
+                filled
+                  ? 'bg-amber-700 text-white border-amber-800 shadow-xs'
+                  : 'bg-stone-100 text-stone-400 border-stone-200'
+              }" title="Stempel ${i}">
+                ${filled ? '☕' : i}
+              </div>
+            `;
+          }
+
+          return `
+            <div class="rounded-2xl border ${isFull ? 'border-emerald-400 bg-emerald-50/20' : 'border-stone-200 bg-white'} p-4 shadow-xs flex flex-col justify-between gap-3 hover:shadow-md transition">
+              <div>
+                <div class="flex items-start justify-between gap-2">
+                  <div>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-stone-100 text-stone-700">${c.id}</span>
+                      ${bStatus.isToday ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-600 text-white">🎂 Ultah Hari Ini!</span>` : ''}
+                      ${isFull ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-600 text-white">🎁 Gratis 1 Cup Siap Klaim!</span>` : ''}
+                    </div>
+                    <h3 class="font-bold text-stone-900 text-sm sm:text-base mt-1">${escapeHtml(c.name)}</h3>
+                    <p class="text-xs text-stone-500">${escapeHtml(c.phone)} • ${escapeHtml(c.location || 'Lokasi belum diisi')}</p>
+                  </div>
+                  <span class="text-xs font-extrabold px-2.5 py-1 rounded-xl ${isFull ? 'bg-emerald-600 text-white' : 'bg-amber-100 text-amber-900'}">
+                    ${c.stamps}/9
+                  </span>
+                </div>
+
+                <div class="mt-2.5 text-xs bg-stone-50 rounded-xl p-2.5 border border-stone-200/70">
+                  <p class="text-stone-700"><span class="text-stone-400">Menu Favorit:</span> <strong>${escapeHtml(c.favMenu || '-')}</strong></p>
+                  <p class="text-stone-500 truncate mt-0.5"><span class="text-stone-400">Catatan:</span> ${escapeHtml(c.notes || '-')}</p>
+                </div>
+
+                <!-- 9 Mini Stamps -->
+                <div class="mt-3 grid grid-cols-9 gap-1">
+                  ${miniStampsHtml}
+                </div>
+              </div>
+
+              <div class="pt-2 border-t border-stone-100 flex items-center gap-2">
+                ${
+                  isFull
+                    ? `<button type="button" data-action="claim-9" data-id="${c.id}" class="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition">
+                        🎁 Tukar Gratis 1 Cup
+                      </button>`
+                    : `<button type="button" data-action="add-stamp" data-id="${c.id}" class="flex-1 py-2 px-3 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs shadow-xs transition stamp-pop">
+                        +1 Stempel Kopi
+                      </button>`
+                }
+                <button type="button" data-action="open-card" data-id="${c.id}" class="py-2 px-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold text-xs transition" title="Buka Kartu Digital & WA">
+                  Kartu &amp; WA
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      function renderCardTab() {
+        const select = document.getElementById('cardMemberSelect');
+        if (customers.length === 0) {
+          select.innerHTML = `<option value="">Belum ada pelanggan</option>`;
+          return;
+        }
+        if (!customers.some(c => c.id === selectedCardCustomerId)) {
+          selectedCardCustomerId = customers[0].id;
+        }
+
+        select.innerHTML = customers.map(c => `
+          <option value="${c.id}" ${c.id === selectedCardCustomerId ? 'selected' : ''}>
+            ${escapeHtml(c.name)} (${c.id}) — ${c.stamps}/9 Stempel
+          </option>
+        `).join('');
+
+        const cust = customers.find(c => c.id === selectedCardCustomerId) || customers[0];
+        const bStatus = getBirthdayStatus(cust.dob, cust.lastBirthdayClaimYear);
+
+        document.getElementById('visualCardId').textContent = cust.id;
+        document.getElementById('visualCardTier').textContent =
+          (cust.totalCups || 0) >= 20 ? '⭐ Pelanggan Setia VIP' : '☕ Teman Sejuta Jiwa';
+        document.getElementById('visualCardName').textContent = cust.name;
+        document.getElementById('visualCardFav').textContent = cust.favMenu || 'Kopi Susu Gula Aren';
+        document.getElementById('visualCardBirthday').textContent =
+          formatDobReadable(cust.dob) + (bStatus.isToday ? ' (🎂 HARI INI!)' : '');
+        document.getElementById('visualStampCounter').textContent = `${cust.stamps} / 9 Stempel`;
+        document.getElementById('visualTotalCups').textContent = `Total Beli: ${cust.totalCups || 0} Cup`;
+        document.getElementById('visualTotalClaimed').textContent = `Gratis Diklaim: ${cust.rewardsClaimed || 0}x`;
+
+        const statusEl = document.getElementById('visualCardStatusText');
+        if (cust.stamps >= 9) {
+          statusEl.innerHTML = `<span class="text-emerald-300 font-bold">🎉 9/9 Stempel Penuh! Siap tukar 1 Cup Kopi Gratis!</span>`;
+        } else {
+          statusEl.textContent = `Kurang ${9 - cust.stamps} stempel lagi untuk klaim 1 Cup Kopi Gratis!`;
+        }
+
+        const grid = document.getElementById('visualStampGrid');
+        let slotsHtml = '';
+        for (let i = 1; i <= 9; i++) {
+          const active = i <= cust.stamps;
+          slotsHtml += `
+            <button type="button" data-stamp-index="${i}" class="stamp-pop h-16 sm:h-20 rounded-2xl border flex flex-col items-center justify-center gap-1 transition ${
+              active
+                ? 'bg-amber-400 text-stone-950 border-amber-200 shadow-md font-extrabold'
+                : 'bg-white/10 text-amber-100/60 border-white/20 hover:bg-white/15'
+            }">
+              <span class="text-lg sm:text-xl">${active ? '☕' : i}</span>
+              <span class="text-[10px] uppercase tracking-wider font-bold">${active ? 'Terisi' : 'Stempel ' + i}</span>
+            </button>
+          `;
+        }
+
+        const rewardReady = cust.stamps >= 9;
+        slotsHtml += `
+          <button type="button" id="visualSlot10Reward" class="stamp-pop h-16 sm:h-20 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-0.5 transition ${
+            rewardReady
+              ? 'bg-emerald-500 text-white border-emerald-200 shadow-lg animate-pulse font-extrabold'
+              : 'bg-black/25 text-amber-300 border-amber-300/40'
+          }">
+            <span class="text-lg sm:text-xl">🎁</span>
+            <span class="text-[10px] uppercase tracking-wider font-extrabold">${rewardReady ? 'KLAIM GRATIS!' : 'GRATIS 1 CUP'}</span>
+          </button>
+        `;
+        grid.innerHTML = slotsHtml;
+
+        const detailBox = document.getElementById('cardMemberDetailBox');
+        detailBox.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-stone-800">${escapeHtml(cust.name)}</span>
+            <span class="text-stone-500">${escapeHtml(cust.phone)}</span>
+          </div>
+          <p class="text-stone-600"><strong>Lokasi Langganan:</strong> ${escapeHtml(cust.location || '-')}</p>
+          <p class="text-stone-600"><strong>Catatan Pesanan:</strong> ${escapeHtml(cust.notes || '-')}</p>
+          <p class="text-stone-600"><strong>Status Gratis Ultah (${getTodayParts().year}):</strong> ${
+            bStatus.claimedThisYear
+              ? '<span class="text-emerald-700 font-semibold">Sudah Diklaim Tahun Ini</span>'
+              : '<span class="text-rose-700 font-semibold">Belum Diklaim (Tersedia saat Ultah)</span>'
+          }</p>
+        `;
+
+        document.getElementById('whatsappPreviewBox').textContent = buildWhatsAppMessage(cust, 'auto');
+      }
+
+      function renderDatabaseTable() {
+        const query = (document.getElementById('dbSearchInput').value || '').toLowerCase().trim();
+        const monthFilter = document.getElementById('dbMonthFilter').value;
+        const tbody = document.getElementById('dbTableBody');
+
+        const filtered = customers.filter(c => {
+          const matchQuery =
+            c.name.toLowerCase().includes(query) ||
+            c.phone.toLowerCase().includes(query) ||
+            (c.location || '').toLowerCase().includes(query) ||
+            (c.favMenu || '').toLowerCase().includes(query) ||
+            (c.notes || '').toLowerCase().includes(query) ||
+            c.id.toLowerCase().includes(query);
+          if (!matchQuery) return false;
+
+          if (monthFilter !== 'all') {
+            const bStatus = getBirthdayStatus(c.dob, c.lastBirthdayClaimYear);
+            if (String(bStatus.bMonth) !== monthFilter) return false;
+          }
+          return true;
+        });
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="7" class="py-8 text-center text-stone-500 text-xs sm:text-sm">
+                Tidak ada data pelanggan yang sesuai filter.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = filtered.map(c => {
+          const bStatus = getBirthdayStatus(c.dob, c.lastBirthdayClaimYear);
+          let bdayBadge = '';
+          if (bStatus.isToday) {
+            bdayBadge = `<span class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-600 text-white">🎂 Ultah Hari Ini!</span>`;
+          } else if (bStatus.isWithin7Days) {
+            bdayBadge = `<span class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-900">🎉 ${bStatus.daysUntil} hari lagi</span>`;
+          } else if (bStatus.isThisMonth) {
+            bdayBadge = `<span class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-800">Bulan Ini</span>`;
+          }
+
+          return `
+            <tr class="hover:bg-amber-50/40 transition">
+              <td class="py-3 px-3 align-top">
+                <span class="text-[11px] font-mono font-bold text-amber-800 bg-amber-100/80 px-1.5 py-0.5 rounded">${c.id}</span>
+                <p class="font-bold text-stone-900 mt-1">${escapeHtml(c.name)}</p>
+                <p class="text-[11px] text-stone-400">Join: ${escapeHtml(c.joinedAt || '-')}</p>
+              </td>
+              <td class="py-3 px-3 align-top">
+                <button type="button" data-action="wa-regular" data-id="${c.id}" class="text-green-700 hover:underline font-semibold flex items-center gap-1">
+                  <span>${escapeHtml(c.phone)}</span>
+                </button>
+                <p class="text-xs text-stone-500 mt-0.5">📍 ${escapeHtml(c.location || '-')}</p>
+              </td>
+              <td class="py-3 px-3 align-top">
+                <p class="font-medium text-stone-800">${formatDobReadable(c.dob)}</p>
+                ${bdayBadge}
+                <p class="text-[11px] text-stone-500 mt-0.5">
+                  Free Ultah: <strong>${bStatus.claimedThisYear ? 'Sudah Diklaim' : 'Tersedia'}</strong>
+                </p>
+              </td>
+              <td class="py-3 px-3 align-top max-w-xs">
+                <p class="font-semibold text-stone-800">${escapeHtml(c.favMenu || '-')}</p>
+                <p class="text-xs text-stone-500 mt-0.5">${escapeHtml(c.notes || '-')}</p>
+              </td>
+              <td class="py-3 px-3 align-top text-center">
+                <span class="inline-block px-2.5 py-1 rounded-full text-xs font-extrabold ${
+                  c.stamps >= 9 ? 'bg-emerald-600 text-white' : 'bg-amber-100 text-amber-900'
+                }">
+                  ${c.stamps} / 9
+                </span>
+              </td>
+              <td class="py-3 px-3 align-top text-center">
+                <p class="font-bold text-stone-900">${c.totalCups || 0} Cup</p>
+                <p class="text-[11px] text-stone-500">Gratis: ${c.rewardsClaimed || 0}x</p>
+              </td>
+              <td class="py-3 px-3 align-top text-right whitespace-nowrap">
+                <div class="inline-flex items-center gap-1">
+                  <button type="button" data-action="open-card" data-id="${c.id}" class="px-2.5 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 font-semibold text-xs">
+                    Kartu
+                  </button>
+                  <button type="button" data-action="edit-customer" data-id="${c.id}" class="px-2.5 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold text-xs">
+                    Edit
+                  </button>
+                  <button type="button" data-action="delete-customer" data-id="${c.id}" class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold text-xs">
+                    Hapus
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      function renderLogs() {
+        const filter = document.getElementById('logFilterType').value;
+        const container = document.getElementById('logListContainer');
+
+        const filtered = logs.filter(l => filter === 'all' || l.type === filter);
+        if (filtered.length === 0) {
+          container.innerHTML = `
+            <div class="py-8 text-center text-stone-500 text-xs sm:text-sm">
+              Belum ada riwayat aktivitas untuk kategori ini.
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = filtered.map(l => {
+          let badge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900">+ Stempel</span>`;
+          if (l.type === 'REWARD_9') {
+            badge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">🎁 Gratis 9 Stempel</span>`;
+          } else if (l.type === 'BIRTHDAY_FREE') {
+            badge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">🎂 Gratis Ultah</span>`;
+          }
+
+          return `
+            <div class="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs sm:text-sm">
+              <div class="flex items-start sm:items-center gap-2.5">
+                ${badge}
+                <div>
+                  <span class="font-bold text-stone-900">${escapeHtml(l.customerName)}</span>
+                  <span class="text-stone-400 font-mono text-xs">(${l.customerId})</span>
+                  <p class="text-stone-600 text-xs mt-0.5">${escapeHtml(l.detail)}</p>
+                </div>
+              </div>
+              <span class="text-[11px] text-stone-400 shrink-0">${escapeHtml(l.timestamp)}</span>
+            </div>
+          `;
+        }).join('');
+      }
+
+      function renderQrCodePoster() {
+        const urlInput = document.getElementById('qrUrlInput');
+        const titleInput = document.getElementById('qrPromoTitleInput');
+        const container = document.getElementById('qrCodeCanvasContainer');
+        const headlineEl = document.getElementById('posterHeadlineText');
+        if (!urlInput || !container) return;
+
+        const targetUrl = (urlInput.value || 'https://docs.google.com/spreadsheets/d/167cBPm4BW1OnUHXEexm1_hlXxp4Gtl1_PFsZaN8bRes/edit').trim();
+        if (headlineEl && titleInput) {
+          headlineEl.textContent = titleInput.value || 'DAFTAR MEMBER GRATIS!';
+        }
+
+        try {
+          if (typeof qrcode === 'function') {
+            const qr = qrcode(0, 'M');
+            qr.addData(targetUrl);
+            qr.make();
+            container.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 1, scalable: true });
+            const svgEl = container.querySelector('svg');
+            if (svgEl) {
+              svgEl.setAttribute('width', '180');
+              svgEl.setAttribute('height', '180');
+              svgEl.classList.add('w-44', 'h-44');
+            }
+            return;
+          }
+        } catch (err) {
+          // Fallback deterministic SVG QR visual if offline
+        }
+
+        // Deterministic fallback QR SVG
+        let cells = '';
+        for (let r = 0; r < 21; r++) {
+          for (let c = 0; c < 21; c++) {
+            const isFinder = (r < 7 && c < 7) || (r < 7 && c > 13) || (r > 13 && c < 7);
+            const isBorder = isFinder && (r === 0 || r === 6 || r === 14 || r === 20 || c === 0 || c === 6 || c === 14 || c === 20);
+            const isCenter = isFinder && ((r >= 2 && r <= 4 && c >= 2 && c <= 4) || (r >= 2 && r <= 4 && c >= 16 && c <= 18) || (r >= 16 && r <= 18 && c >= 2 && c <= 4));
+            const hashBit = ((r * 31 + c * 17 + targetUrl.charCodeAt((r + c) % targetUrl.length)) % 3 === 0);
+            if (isBorder || isCenter || (!isFinder && hashBit)) {
+              cells += `<rect x="${c * 8 + 6}" y="${r * 8 + 6}" width="8" height="8" fill="#1c1917"/>`;
+            }
+          }
+        }
+        container.innerHTML = `<svg viewBox="0 0 180 180" class="w-44 h-44" xmlns="http://www.w3.org/2000/svg"><rect width="180" height="180" fill="#ffffff"/>${cells}</svg>`;
+      }
+
+      function downloadPosterAsPng() {
+        const urlInput = document.getElementById('qrUrlInput');
+        const titleInput = document.getElementById('qrPromoTitleInput');
+        const targetUrl = (urlInput && urlInput.value ? urlInput.value : 'https://docs.google.com/spreadsheets/d/167cBPm4BW1OnUHXEexm1_hlXxp4Gtl1_PFsZaN8bRes/edit').trim();
+        const headline = (titleInput && titleInput.value ? titleInput.value : 'DAFTAR MEMBER GRATIS!').trim();
+
+        const canvas = document.createElement('canvas');
+        canvas.width = 800;
+        canvas.height = 1050;
+        const ctx = canvas.getContext('2d');
+
+        // Background gradient
+        const grad = ctx.createLinearGradient(0, 0, 800, 1050);
+        grad.addColorStop(0, '#3b2314');
+        grad.addColorStop(0.55, '#683b20');
+        grad.addColorStop(1, '#8c5230');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 800, 1050);
+
+        // Border
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 10;
+        ctx.strokeRect(24, 24, 752, 1002);
+
+        // Top badge
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(220, 65, 360, 44);
+        ctx.fillStyle = '#1c1917';
+        ctx.font = 'bold 20px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('KOPI SEJUTA JIWA KELILING', 400, 94);
+
+        // Headline
+        ctx.fillStyle = '#fde68a';
+        ctx.font = 'bold 42px Inter, sans-serif';
+        ctx.fillText(headline.toUpperCase(), 400, 170);
+
+        ctx.fillStyle = '#fef3c7';
+        ctx.font = '20px Inter, sans-serif';
+        ctx.fillText('Scan QR Code di bawah ini sambil menunggu kopimu diseduh', 400, 210);
+
+        // White QR Box
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(200, 245, 400, 420);
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 6;
+        ctx.strokeRect(200, 245, 400, 420);
+
+        // Draw QR modules
+        try {
+          if (typeof qrcode === 'function') {
+            const qr = qrcode(0, 'M');
+            qr.addData(targetUrl);
+            qr.make();
+            const count = qr.getModuleCount();
+            const size = 320;
+            const cell = size / count;
+            const startX = 400 - size / 2;
+            const startY = 275;
+            ctx.fillStyle = '#1c1917';
+            for (let r = 0; r < count; r++) {
+              for (let c = 0; c < count; c++) {
+                if (qr.isDark(r, c)) {
+                  ctx.fillRect(startX + c * cell, startY + r * cell, Math.ceil(cell), Math.ceil(cell));
+                }
+              }
+            }
+          }
+        } catch (e) {}
+
+        ctx.fillStyle = '#292524';
+        ctx.font = 'bold 16px Inter, sans-serif';
+        ctx.fillText('SCAN DENGAN KAMERA HP / GOOGLE LENS', 400, 640);
+
+        // Promo Boxes
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+        ctx.fillRect(70, 710, 315, 175);
+        ctx.fillRect(415, 710, 315, 175);
+
+        ctx.fillStyle = '#fcd34d';
+        ctx.font = 'bold 26px Inter, sans-serif';
+        ctx.fillText('BELI 9 GRATIS 1 CUP', 227, 765);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '18px Inter, sans-serif';
+        ctx.fillText('Kumpulkan 9 stempel digital', 227, 805);
+        ctx.fillText('& tukar 1 cup kopi gratis!', 227, 835);
+
+        ctx.fillStyle = '#fda4af';
+        ctx.font = 'bold 26px Inter, sans-serif';
+        ctx.fillText('FREE KOPI ULTAH', 572, 765);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '18px Inter, sans-serif';
+        ctx.fillText('Gratis 1 cup kopi favoritmu', 572, 805);
+        ctx.fillText('tepat di hari ulang tahun!', 572, 835);
+
+        ctx.fillStyle = '#fde68a';
+        ctx.font = 'bold 18px Inter, sans-serif';
+        ctx.fillText('Tanpa Kartu Fisik • Tanpa Install Aplikasi • Notifikasi via WhatsApp', 400, 960);
+
+        const dataUrl = canvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = 'Poster_QR_Member_Sejuta_Jiwa_Keliling.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast('Gambar Poster QR (PNG) berhasil diunduh & siap cetak!', 'bg-emerald-400');
+      }
+
+      function renderAll() {
+        renderQrCodePoster();
+        renderKPIsAndBirthdays();
+        renderKasirGrid();
+        renderCardTab();
+        renderDatabaseTable();
+        renderLogs();
+      }
+
+      function switchTab(tabName) {
+        ['kasir', 'kartu', 'database', 'riwayat', 'qrcode'].forEach(t => {
+          const section = document.getElementById('view-' + t);
+          if (t === tabName) {
+            section.classList.remove('hidden');
+          } else {
+            section.classList.add('hidden');
+          }
+        });
+
+        document.querySelectorAll('.nav-tab').forEach(btn => {
+          if (btn.getAttribute('data-tab') === tabName) {
+            btn.className = 'nav-tab px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition flex items-center gap-2 bg-amber-400 text-stone-950 shadow-sm';
+          } else {
+            btn.className = 'nav-tab px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition flex items-center gap-2 text-amber-100 hover:bg-white/10';
+          }
+        });
+      }
+
+      function openCustomerModal(customer) {
+        const modal = document.getElementById('customerModal');
+        document.getElementById('modalTitle').textContent = customer ? `Edit Data ${customer.name}` : 'Tambah Pelanggan Baru';
+        document.getElementById('formCustomerId').value = customer ? customer.id : '';
+        document.getElementById('formName').value = customer ? customer.name : '';
+        document.getElementById('formPhone').value = customer ? customer.phone : '';
+        document.getElementById('formDob').value = customer ? customer.dob : '';
+        document.getElementById('formLocation').value = customer ? (customer.location || '') : '';
+        document.getElementById('formFavMenu').value = customer ? (customer.favMenu || '') : '';
+        document.getElementById('formStamps').value = customer ? customer.stamps : 1;
+        document.getElementById('formNotes').value = customer ? (customer.notes || '') : '';
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+
+      function closeCustomerModal() {
+        const modal = document.getElementById('customerModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+
+      function generateNextId() {
+        let maxNum = 0;
+        customers.forEach(c => {
+          const m = String(c.id).match(/(\d+)/);
+          if (m) {
+            const n = parseInt(m[1], 10);
+            if (n > maxNum) maxNum = n;
+          }
+        });
+        return 'SJ-' + String(maxNum + 1).padStart(3, '0');
+      }
+
+      function exportCSV() {
+        const headers = ['ID Member', 'Nama Lengkap', 'No WhatsApp', 'Tanggal Lahir', 'Lokasi Langganan', 'Menu Favorit', 'Catatan Preferensi', 'Stempel Aktif (per 9)', 'Total Cup Dibeli', 'Total Gratis Diklaim', 'Tanggal Bergabung'];
+        const rows = customers.map(c => [
+          c.id,
+          c.name,
+          c.phone,
+          c.dob,
+          c.location || '',
+          c.favMenu || '',
+          c.notes || '',
+          c.stamps,
+          c.totalCups || 0,
+          c.rewardsClaimed || 0,
+          c.joinedAt || ''
+        ]);
+
+        const csvContent = [headers, ...rows]
+          .map(r => r.map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
+          .join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Database_Pelanggan_Sejuta_Jiwa_${getTodayParts().isoDate}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        showToast('Database CSV berhasil diunduh!', 'bg-emerald-400');
+      }
+
+      function backupJSON() {
+        const payload = {
+          business: 'Sejuta Jiwa Keliling',
+          exportedAt: new Date().toISOString(),
+          customers: customers,
+          logs: logs
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Backup_Sejuta_Jiwa_${getTodayParts().isoDate}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('File Backup JSON berhasil diunduh!', 'bg-emerald-400');
+      }
+
+      function escapeHtml(str) {
+        return String(str || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function initEvents() {
+        document.querySelectorAll('.nav-tab').forEach(btn => {
+          btn.addEventListener('click', () => {
+            switchTab(btn.getAttribute('data-tab'));
+          });
+        });
+
+        document.getElementById('btnOpenAddCustomer').addEventListener('click', () => openCustomerModal(null));
+        document.getElementById('btnExportCSV').addEventListener('click', exportCSV);
+        document.getElementById('btnCloseModal').addEventListener('click', closeCustomerModal);
+        document.getElementById('btnCancelModal').addEventListener('click', closeCustomerModal);
+
+        document.getElementById('btnConfirmCancel').addEventListener('click', closeConfirm);
+        document.getElementById('btnConfirmOk').addEventListener('click', () => {
+          if (typeof pendingConfirmCallback === 'function') {
+            pendingConfirmCallback();
+          }
+          closeConfirm();
+        });
+
+        document.getElementById('qrUrlInput').addEventListener('input', renderQrCodePoster);
+        document.getElementById('qrPromoTitleInput').addEventListener('input', renderQrCodePoster);
+        document.getElementById('btnUseWaLinkForQr').addEventListener('click', () => {
+          const waText = encodeURIComponent('Halo Admin Sejuta Jiwa Keliling! ☕ Saya mau daftar Member Loyalty Gratis (Beli 9 Gratis 1 + Free Kopi Ultah):\n\n• Nama Lengkap: \n• Tanggal Lahir: \n• Lokasi Beli: \n• Menu Favorit: ');
+          document.getElementById('qrUrlInput').value = 'https://wa.me/6281234567890?text=' + waText;
+          renderQrCodePoster();
+          showToast('QR Code diatur ke link Pendaftaran Otomatis via Chat WhatsApp!', 'bg-emerald-400');
+        });
+        document.getElementById('btnDownloadPosterPng').addEventListener('click', downloadPosterAsPng);
+        document.getElementById('btnPrintPoster').addEventListener('click', () => window.print());
+        document.getElementById('btnCopyAppsScript').addEventListener('click', () => {
+          const scriptText = document.getElementById('appsScriptCodeBox').textContent;
+          copyToClipboard(scriptText, 'Kode Google Apps Script berhasil disalin!');
+        });
+
+                document.getElementById('kasirSearchInput').addEventListener('input', renderKasirGrid);
+        document.getElementById('kasirFilterSelect').addEventListener('change', renderKasirGrid);
+        document.getElementById('dbSearchInput').addEventListener('input', renderDatabaseTable);
+        document.getElementById('dbMonthFilter').addEventListener('change', renderDatabaseTable);
+        document.getElementById('logFilterType').addEventListener('change', renderLogs);
+
+        document.getElementById('btnClearLogs').addEventListener('click', () => {
+          openConfirm(
+            'Bersihkan Riwayat Log?',
+            'Semua catatan riwayat transaksi akan dihapus, namun data stempel dan pelanggan tetap aman.',
+            () => {
+              logs = [];
+              saveState();
+              renderLogs();
+              showToast('Riwayat log berhasil dibersihkan.', 'bg-stone-400');
+            }
+          );
+        });
+
+        document.getElementById('btnBackupJSON').addEventListener('click', backupJSON);
+        document.getElementById('inputRestoreJSON').addEventListener('change', (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = function (evt) {
+            try {
+              const parsed = JSON.parse(evt.target.result);
+              if (Array.isArray(parsed.customers)) {
+                customers = parsed.customers;
+                if (Array.isArray(parsed.logs)) logs = parsed.logs;
+                saveState();
+                renderAll();
+                showToast('Database berhasil dipulihkan dari file JSON!', 'bg-emerald-400');
+              } else {
+                showToast('Format file JSON tidak valid.', 'bg-rose-400');
+              }
+            } catch (err) {
+              showToast('Gagal membaca file JSON.', 'bg-rose-400');
+            }
+          };
+          reader.readAsText(file);
+          e.target.value = '';
+        });
+
+        document.getElementById('customerForm').addEventListener('submit', (e) => {
+          e.preventDefault();
+          const existingId = document.getElementById('formCustomerId').value;
+          const name = document.getElementById('formName').value.trim();
+          const phone = document.getElementById('formPhone').value.trim();
+          const dob = document.getElementById('formDob').value;
+          const location = document.getElementById('formLocation').value.trim();
+          const favMenu = document.getElementById('formFavMenu').value.trim();
+          const stamps = Math.min(9, Math.max(0, parseInt(document.getElementById('formStamps').value || '0', 10)));
+          const notes = document.getElementById('formNotes').value.trim();
+
+          if (!name || !phone || !dob) {
+            showToast('Mohon lengkapi Nama, Nomor WA, dan Tanggal Lahir.', 'bg-rose-400');
+            return;
+          }
+
+          if (existingId) {
+            const idx = customers.findIndex(c => c.id === existingId);
+            if (idx !== -1) {
+              customers[idx].name = name;
+              customers[idx].phone = phone;
+              customers[idx].dob = dob;
+              customers[idx].location = location;
+              customers[idx].favMenu = favMenu;
+              customers[idx].stamps = stamps;
+              customers[idx].notes = notes;
+              showToast(`Data pelanggan ${name} berhasil diperbarui!`, 'bg-emerald-400');
+            }
+          } else {
+            const newCust = {
+              id: generateNextId(),
+              name: name,
+              phone: phone,
+              dob: dob,
+              location: location,
+              favMenu: favMenu || 'Kopi Susu Gula Aren',
+              notes: notes,
+              stamps: stamps,
+              totalCups: stamps,
+              rewardsClaimed: 0,
+              lastBirthdayClaimYear: null,
+              joinedAt: getTodayParts().isoDate
+            };
+            customers.unshift(newCust);
+            selectedCardCustomerId = newCust.id;
+            addLog(newCust, 'STAMP', `Member baru terdaftar dengan ${stamps} stempel awal`);
+            showToast(`Pelanggan baru ${name} (${newCust.id}) berhasil ditambahkan!`, 'bg-emerald-400');
+          }
+
+          saveState();
+          closeCustomerModal();
+          renderAll();
+        });
+
+        document.getElementById('cardMemberSelect').addEventListener('change', (e) => {
+          selectedCardCustomerId = e.target.value;
+          renderCardTab();
+        });
+
+        document.getElementById('btnCardAddStamp').addEventListener('click', () => {
+          const menuVal = document.getElementById('stampMenuInput').value;
+          addStamp(selectedCardCustomerId, menuVal);
+          document.getElementById('stampMenuInput').value = '';
+        });
+
+        document.getElementById('btnCardMinusStamp').addEventListener('click', () => {
+          minusStamp(selectedCardCustomerId);
+        });
+
+        document.getElementById('btnCardClaimReward').addEventListener('click', () => {
+          claimReward9(selectedCardCustomerId);
+        });
+
+        document.getElementById('btnCardClaimBirthday').addEventListener('click', () => {
+          claimBirthdayFree(selectedCardCustomerId);
+        });
+
+        document.getElementById('btnSendWhatsAppCard').addEventListener('click', () => {
+          const cust = customers.find(c => c.id === selectedCardCustomerId);
+          if (cust) openWhatsApp(cust, 'auto');
+        });
+
+        document.getElementById('btnCopyCardText').addEventListener('click', () => {
+          const cust = customers.find(c => c.id === selectedCardCustomerId);
+          if (cust) {
+            copyToClipboard(buildWhatsAppMessage(cust, 'auto'), `Pesan kartu ${cust.name} berhasil disalin!`);
+          }
+        });
+
+        document.getElementById('visualStampGrid').addEventListener('click', (e) => {
+          const slotBtn = e.target.closest('[data-stamp-index]');
+          if (slotBtn) {
+            const idx = parseInt(slotBtn.getAttribute('data-stamp-index'), 10);
+            setExactStamp(selectedCardCustomerId, idx);
+            return;
+          }
+          const rewardSlot = e.target.closest('#visualSlot10Reward');
+          if (rewardSlot) {
+            claimReward9(selectedCardCustomerId);
+          }
+        });
+
+        document.body.addEventListener('click', (e) => {
+          const actionBtn = e.target.closest('[data-action]');
+          if (!actionBtn) return;
+
+          const action = actionBtn.getAttribute('data-action');
+          const id = actionBtn.getAttribute('data-id');
+          const cust = customers.find(c => c.id === id);
+          if (!cust) return;
+
+          if (action === 'add-stamp') {
+            addStamp(id);
+          } else if (action === 'claim-9') {
+            claimReward9(id);
+          } else if (action === 'claim-bday') {
+            claimBirthdayFree(id);
+          } else if (action === 'wa-bday') {
+            openWhatsApp(cust, 'birthday');
+          } else if (action === 'wa-regular') {
+            openWhatsApp(cust, 'regular');
+          } else if (action === 'open-card') {
+            selectedCardCustomerId = id;
+            renderCardTab();
+            switchTab('kartu');
+          } else if (action === 'edit-customer') {
+            openCustomerModal(cust);
+          } else if (action === 'delete-customer') {
+            openConfirm(
+              `Hapus Pelanggan ${cust.name}?`,
+              `Data ${cust.name} (${cust.id}) beserta ${cust.stamps} stempel aktifnya akan dihapus dari database.`,
+              () => {
+                customers = customers.filter(c => c.id !== id);
+                saveState();
+                renderAll();
+                showToast(`Data pelanggan ${cust.name} telah dihapus.`, 'bg-stone-400');
+              }
+            );
+          }
+        });
+      }
+
+      loadState();
+      initEvents();
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
